@@ -1,0 +1,11 @@
+README.md
+followup_agent.py
+gmail_client.py
+main.py
+pyproject.toml
+nudge_agent.egg-info/PKG-INFO
+nudge_agent.egg-info/SOURCES.txt
+nudge_agent.egg-info/dependency_links.txt
+nudge_agent.egg-info/entry_points.txt
+nudge_agent.egg-info/requires.txt
+nudge_agent.egg-info/top_level.txt

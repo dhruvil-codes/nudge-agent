@@ -1,0 +1,2 @@
+[console_scripts]
+nudge = main:main

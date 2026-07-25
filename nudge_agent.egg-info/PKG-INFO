@@ -1,0 +1,74 @@
+Metadata-Version: 2.1
+Name: nudge-agent
+Version: 0.1.0
+Summary: AI-powered Gmail follow-up CLI agent
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+
+# 🚀 Nudge — AI Gmail Follow-up Agent
+
+**Nudge** is an autonomous CLI agent that scans your sent Gmail threads, determines which emails need a follow-up using deterministic rules, and generates natural 2-4 sentence follow-up replies using **Groq AI (Llama 3.3 70B)**. 
+
+With human-in-the-loop approval, Nudge attaches approved drafts directly to the original Gmail thread.
+
+---
+
+## ✨ Features
+
+- 🔒 **Secure OAuth 2.0 Integration**: Uses official Gmail API to read threads and create drafts.
+- 🧠 **Smart Decision Engine**: Rule-based filtering:
+  - Skips threads where the recipient already replied.
+  - Skips threads where last message was sent < 3 days ago.
+  - Skips threads where you've sent 2+ follow-ups already.
+- ⚡️ **Groq AI Generation**: Generates natural, human-sounding follow-ups powered by `llama-3.3-70b-versatile`.
+- 🤝 **Human-in-the-Loop**: Interactive CLI prompt `[A] Approve | [S] Skip` before any draft is created.
+
+---
+
+## 🛠 Project Structure
+
+```text
+nudge/
+├── main.py             # CLI Orchestrator & approval flow
+├── gmail_client.py     # Gmail API client (auth, read threads, create draft)
+├── followup_agent.py   # Decision logic & Groq AI generation
+├── .env.example        # Environment variables template
+├── requirements.txt    # Project dependencies
+└── README.md
+```
+
+---
+
+## 🚀 Quick Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/dhruvil-codes/nudge-agent.git
+   cd nudge-agent
+   ```
+
+2. **Create a virtual environment & install dependencies**:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: .\venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
+   ```
+
+3. **Configure Environment Variables**:
+   Create a `.env` file from `.env.example`:
+   ```bash
+   cp .env.example .env
+   ```
+   Add your Groq API Key:
+   ```env
+   GROQ_API_KEY=gsk_your_groq_api_key_here
+   ```
+
+4. **Add Google OAuth Credentials**:
+   - Download your OAuth Client ID credentials file from Google Cloud Console.
+   - Save it in the project root directory as `credentials.json`.
+
+5. **Run Nudge**:
+   ```bash
+   python main.py
+   ```

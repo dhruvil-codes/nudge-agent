@@ -1,8 +1,17 @@
 import argparse
-import readchar
 import sys
+import readchar
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
 
-from gmail_client import(
+# Ensure UTF-8 output on Windows terminals
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
+console = Console()
+
+from gmail_client import (
     authenticate_gmail,
     get_my_email,
     get_sent_threads,
@@ -11,60 +20,77 @@ from gmail_client import(
     create_draft
 )
 
-from followup_agent import(
+from followup_agent import (
     should_follow_up,
-    generate_followup,   
+    generate_followup
 )
+
+
+BANNER_ART = r"""
+                 _            
+                | |           
+ _ __  _   _  __| | __ _  ___ 
+| '_ \| | | |/ _` |/ _` |/ _ \
+| | | | |_| | (_| | (_| |  __/
+|_| |_|\__,_|\__,_|\__, |\___|
+                    __/ |     
+                   |___/      
+"""
+
 
 def main():
     parser = argparse.ArgumentParser(description="Nudge — AI Gmail Follow-up Agent")
     parser.add_argument("--auto", action="store_true", help="Auto-approve without keypress prompts")
-    parser.add_argument("--limit", type = int, default=50, help="Number of sent threads to scan")
+    parser.add_argument("--limit", type=int, default=50, help="Number of sent threads to scan")
     args = parser.parse_args()
-    print("=" * 50)
-    print(" 🚀 NUDGE — AI Gmail Follow-up Agent")
-    print("=" * 50)
+
+    mode_text = "[yellow]Batch Auto Mode[/yellow]" if args.auto else "[cyan]Interactive Mode[/cyan]"
+    
+    console.print(f"[bold cyan]{BANNER_ART}[/bold cyan]")
+    console.print(
+        Panel.fit(
+            f"[bold white]AI Gmail Follow-up Agent[/bold white] | [dim]Mode: {mode_text}[/dim]",
+            border_style="cyan"
+        )
+    )
 
     # 1. CONNECT GMAIL
     service = authenticate_gmail()
     my_email = get_my_email(service)
-    print(f"✅ Gmail Connected as{my_email}\n")
+    console.print(f"[bold green]✓ Gmail Connected as:[/bold green] [bold yellow]{my_email}[/bold yellow]\n")
 
     # 2. GET SENT THREADS
     thread_ids = get_sent_threads(service, limit=args.limit)
-    print(f"🔍 Scanning last {len(thread_ids)} sent threads...\n")
+    console.print(f"[cyan]🔍 Scanning last {len(thread_ids)} sent threads...[/cyan]\n")
 
     followups_needed = 0
     drafts_created = 0
 
     # 3. PROCESS EACH THREAD
-    
     for thread_id in thread_ids:
         raw_thread = get_thread(service, thread_id)
         thread = parse_thread(raw_thread, my_email)
 
         if not thread:
             continue
-    
-     # 4. DECISION ENGINE
 
+        # 4. DECISION ENGINE
         if not should_follow_up(thread, my_email):
             continue
+
         followups_needed += 1
 
-    # 5. AI GENERATION
-
-        print("🤖 Generating follow-up with Groq AI...")
+        # 5. AI GENERATION
+        console.print("[magenta]🤖 Generating follow-up with Groq AI...[/magenta]")
         followup_text = generate_followup(thread)
 
-    # 6. DISPLAY & HUMAN APPROVAL
-
-        print("-" * 50)
-        print(f"To:      {thread['recipient']}")
-        print(f"Subject: {thread['subject']}")
-        print("\nProposed Follow-up:")
-        print(followup_text)
-        print("-" * 50)
+        # 6. DISPLAY & HUMAN APPROVAL
+        card_content = (
+            f"[bold cyan]To:[/bold cyan] {thread['recipient']}\n"
+            f"[bold cyan]Subject:[/bold cyan] {thread['subject']}\n\n"
+            f"[italic white]{followup_text}[/italic white]"
+        )
+        console.print(Panel(card_content, title="[bold yellow]Proposed Follow-up[/bold yellow]", border_style="yellow"))
 
         if args.auto:
             create_draft(
@@ -75,9 +101,9 @@ def main():
                 body=followup_text
             )
             drafts_created += 1
-            print("✓ Draft created automatically!\n")
+            console.print("[bold green]✓ Draft created automatically![/bold green]\n")
         else:
-            print("Press: [A] Approve Draft | [S] Skip | [E] Edit Text | [Q] Quit")
+            console.print("Press: [bold green][A] Approve[/bold green] | [bold yellow][E] Edit[/bold yellow] | [dim][S] Skip[/dim] | [bold red][Q] Quit[/bold red]")
             key = readchar.readkey().lower()
 
             if key == "a":
@@ -89,11 +115,10 @@ def main():
                     body=followup_text
                 )
                 drafts_created += 1
-                print("✓ Draft created instantly!\n")
-            
-            elif key == "e":
-                print("\n📝 Type your custom follow-up (or press Enter to keep AI text):")
+                console.print("[bold green]✓ Draft created instantly![/bold green]\n")
 
+            elif key == "e":
+                console.print("\n[bold yellow]📝 Type your custom follow-up (or press Enter to keep AI text):[/bold yellow]")
                 custom_body = input("> ").strip()
                 final_body = custom_body if custom_body else followup_text
 
@@ -105,22 +130,25 @@ def main():
                     body=final_body
                 )
                 drafts_created += 1
-                print("✓ Custom draft created!\n")
+                console.print("[bold green]✓ Custom draft created![/bold green]\n")
 
             elif key == "q":
-                print("\nExiting Nudge...")
+                console.print("\n[bold red]Exiting Nudge...[/bold red]")
                 break
             else:
-                print("Skipped!\n")
+                console.print("[dim]Skipped![/dim]\n")
 
     # 7. SUMMARY REPORT
+    table = Table(title="🎉 NUDGE SUMMARY REPORT", border_style="magenta")
+    table.add_column("Metric", style="cyan", justify="left")
+    table.add_column("Count", style="bold green", justify="right")
 
-    print("=" * 50)
-    print("🎉 NUDGE COMPLETE")
-    print(f"Threads scanned:   {len(thread_ids)}")
-    print(f"Follow-ups needed: {followups_needed}")
-    print(f"Drafts created:    {drafts_created}")
-    print("=" * 50)
+    table.add_row("Threads Scanned", str(len(thread_ids)))
+    table.add_row("Follow-ups Needed", str(followups_needed))
+    table.add_row("Drafts Created", str(drafts_created))
+
+    console.print(table)
+
 
 if __name__ == "__main__":
     main()

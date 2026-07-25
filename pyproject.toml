@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nudge-agent"
+version = "0.1.0"
+description = "AI-powered Gmail follow-up CLI agent"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "google-api-python-client",
+    "google-auth-httplib2",
+    "google-auth-oauthlib",
+    "openai",
+    "python-dotenv",
+    "readchar",
+    "rich"
+]
+
+[tool.setuptools]
+py-modules = ["main", "gmail_client", "followup_agent"]
+
+[project.scripts]
+nudge = "main:main"
