@@ -39,7 +39,8 @@ def render_welcome_splash(mode_text):
         "                    __/ |     \n"
         "                   |___/      \n"
         "[/bold cyan]\n"
-        "[bold white]Autonomous AI Gmail Follow-up Agent[/bold white]  |  [dim]Mode: " + mode_text + "[/dim]\n\n"
+        "[bold white]Autonomous AI Gmail Follow-up Agent[/bold white]  |  [dim]Mode: " + mode_text + "[/dim]\n"
+        "[dim cyan]built by @bydhruvil ;)[/dim cyan]\n\n"
         "[bold yellow]✨ What Nudge can do:[/bold yellow]\n"
         "[cyan]•[/cyan] Scans sent Gmail threads for unanswered emails\n"
         "[cyan]•[/cyan] Rule engine: skips replies, <3 days, or 2+ follow-ups\n"
@@ -49,13 +50,14 @@ def render_welcome_splash(mode_text):
 
     right_content = (
         "\n"
-        "       [dim white]·[/dim white]        [yellow]✦[/yellow]         [dim white]·[/dim white]\n"
-        "   [cyan]✧[/cyan]       [white]*[/white]          [magenta]✦[/magenta]       \n"
-        "       [dim yellow]°[/dim yellow]        [dim white]·[/dim white]         [cyan]✧[/cyan]\n"
-        "   [white]*[/white]        [yellow]✦[/yellow]        [white]*[/white]        [dim white]·[/dim white]\n"
-        "       [magenta]✧[/magenta]        [dim yellow]°[/dim yellow]         [yellow]✦[/yellow]\n"
-        "   [cyan]✦[/cyan]        [dim white]·[/dim white]        [magenta]✧[/magenta]        \n"
-        "       [white]*[/white]        [cyan]✦[/cyan]         [white]*[/white]\n"
+        "  [yellow]✦[/yellow]   .  [bold white]*[/bold white]  [magenta]✧[/magenta]  .   [cyan]✦[/cyan]  .  [bold white]*[/bold white]\n"
+        "    .  [cyan]✦[/cyan]  ˚   .  [magenta]✦[/magenta]  [bold white]*[/bold white]  .  [yellow]✦[/yellow]\n"
+        "  [magenta]✧[/magenta]   .  [bold white]*[/bold white]  [yellow]✦[/yellow]  .   [cyan]˚[/cyan]  .  [magenta]✧[/magenta]\n"
+        "    [cyan]✦[/cyan]  .  [bold white]*[/bold white]  .  [magenta]✦[/magenta]  [yellow]✦[/yellow]  .  [bold white]*[/bold white]\n"
+        "  .   [magenta]✧[/magenta]   [yellow]✦[/yellow]  .  [bold white]*[/bold white]  .  [cyan]✦[/cyan]  .\n"
+        "    [yellow]✦[/yellow]  .  [cyan]˚[/cyan]   .  [magenta]✧[/magenta]  [bold white]*[/bold white]  .   [yellow]✦[/yellow]\n"
+        "  [bold white]*[/bold white]   .  [magenta]✦[/magenta]  [yellow]✦[/yellow]  .   [cyan]✦[/cyan]  .  [bold white]*[/bold white]\n"
+        "    [cyan]✦[/cyan]  .  [bold white]*[/bold white]  .  [yellow]✧[/yellow]  .   [magenta]✦[/magenta]  [yellow]˚[/yellow]\n"
     )
 
     grid = Table.grid(expand=True)
