@@ -26,16 +26,45 @@ from followup_agent import (
 )
 
 
-BANNER_ART = r"""
-                 _            
-                | |           
- _ __  _   _  __| | __ _  ___ 
-| '_ \| | | |/ _` |/ _` |/ _ \
-| | | | |_| | (_| | (_| |  __/
-|_| |_|\__,_|\__,_|\__, |\___|
-                    __/ |     
-                   |___/      
-"""
+def render_welcome_splash(mode_text):
+    """Renders the custom 2-column splash screen with ASCII logo, stars, and features."""
+    left_content = (
+        "[bold cyan]"
+        "                 _            \n"
+        "                | |           \n"
+        " _ __  _   _  __| | __ _  ___ \n"
+        "| '_ \| | | |/ _` |/ _` |/ _ \\\n"
+        "| | | | |_| | (_| | (_| |  __/\n"
+        "|_| |_|\__,_|\__,_|\__, |\___|\n"
+        "                    __/ |     \n"
+        "                   |___/      \n"
+        "[/bold cyan]\n"
+        "[bold white]Autonomous AI Gmail Follow-up Agent[/bold white]  |  [dim]Mode: " + mode_text + "[/dim]\n\n"
+        "[bold yellow]✨ What Nudge can do:[/bold yellow]\n"
+        "[cyan]•[/cyan] Scans sent Gmail threads for unanswered emails\n"
+        "[cyan]•[/cyan] Rule engine: skips replies, <3 days, or 2+ follow-ups\n"
+        "[cyan]•[/cyan] Groq AI (Llama 3.3 70B) generates natural replies\n"
+        "[cyan]•[/cyan] Human approval: [bold green][A] Approve[/bold green] | [bold yellow][E] Edit[/bold yellow] | [dim][S] Skip[/dim]"
+    )
+
+    right_content = (
+        "\n\n"
+        "  [yellow]✦[/yellow]   .  [bold white]*[/bold white]  [magenta]✧[/magenta]  .   [cyan]✦[/cyan]  .  [bold white]*[/bold white]\n"
+        "    .  [cyan]✦[/cyan]  ˚   .  [magenta]✦[/magenta]  [bold white]*[/bold white]  .  [yellow]✦[/yellow]\n"
+        "  [magenta]✧[/magenta]   .  [bold white]*[/bold white]  [yellow]✦[/yellow]  .   [cyan]˚[/cyan]  .  [magenta]✧[/magenta]\n"
+        "    [cyan]✦[/cyan]  .  [bold white]*[/bold white]  .  [magenta]✦[/magenta]  [yellow]✦[/yellow]  .  [bold white]*[/bold white]\n"
+        "  .   [magenta]✧[/magenta]   [yellow]✦[/yellow]  .  [bold white]*[/bold white]  .  [cyan]✦[/cyan]  .\n"
+        "    [yellow]✦[/yellow]  .  [cyan]˚[/cyan]   .  [magenta]✧[/magenta]  [bold white]*[/bold white]  .   [yellow]✦[/yellow]\n"
+        "  [bold white]*[/bold white]   .  [magenta]✦[/magenta]  [yellow]✦[/yellow]  .   [cyan]✦[/cyan]  .  [bold white]*[/bold white]\n"
+        "    [cyan]✦[/cyan]  .  [bold white]*[/bold white]  .  [yellow]✧[/yellow]  .   [magenta]✦[/magenta]  [yellow]˚[/yellow]\n"
+    )
+
+    grid = Table.grid(expand=True)
+    grid.add_column(ratio=2)
+    grid.add_column(ratio=1, justify="center")
+    grid.add_row(left_content, right_content)
+
+    console.print(Panel(grid, border_style="cyan", title="[bold white]NUDGE AI[/bold white]", title_align="left"))
 
 
 def main():
@@ -46,13 +75,7 @@ def main():
 
     mode_text = "[yellow]Batch Auto Mode[/yellow]" if args.auto else "[cyan]Interactive Mode[/cyan]"
     
-    console.print(f"[bold cyan]{BANNER_ART}[/bold cyan]")
-    console.print(
-        Panel.fit(
-            f"[bold white]AI Gmail Follow-up Agent[/bold white] | [dim]Mode: {mode_text}[/dim]",
-            border_style="cyan"
-        )
-    )
+    render_welcome_splash(mode_text)
 
     # 1. CONNECT GMAIL
     service = authenticate_gmail()
