@@ -44,7 +44,7 @@ def render_welcome_splash(mode_text):
         "[cyan]•[/cyan] Scans sent Gmail threads for unanswered emails\n"
         "[cyan]•[/cyan] Rule engine: skips replies, <3 days, or 2+ follow-ups\n"
         "[cyan]•[/cyan] Generates short, natural follow-up drafts\n"
-        "[cyan]•[/cyan] Human approval: [bold green][A] Approve[/bold green] | [bold yellow][E] Edit[/bold yellow] | [dim][S] Skip[/dim]"
+        "[cyan]•[/cyan] Human approval: [bold green][A] Approve[/bold green] | [bold yellow][E] Edit[/bold yellow] | [dim][S] Skip[/dim] | [bold red][Q] Quit[/bold red]"
     )
 
     right_content = (
