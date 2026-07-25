@@ -1,0 +1,16 @@
+# Virtual Environment
+venv/
+.venv/
+
+# Secrets & OAuth Tokens (NEVER COMMIT THESE)
+credentials.json
+token.json
+.env
+
+# Python Cache
+__pycache__/
+*.pyc
+
+# IDE / Editor Files
+.vscode/
+.idea/
