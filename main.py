@@ -1,3 +1,7 @@
+import argparse
+import readchar
+import sys
+
 from gmail_client import(
     authenticate_gmail,
     get_my_email,
@@ -13,6 +17,10 @@ from followup_agent import(
 )
 
 def main():
+    parser = argparse.ArgumentParser(description="Nudge — AI Gmail Follow-up Agent")
+    parser.add_argument("--auto", action="store_true", help="Auto-approve without keypress prompts")
+    parser.add_argument("--limit", type = int, default=50, help="Number of sent threads to scan")
+    args = parser.parse_args()
     print("=" * 50)
     print(" 🚀 NUDGE — AI Gmail Follow-up Agent")
     print("=" * 50)
@@ -23,7 +31,7 @@ def main():
     print(f"✅ Gmail Connected as{my_email}\n")
 
     # 2. GET SENT THREADS
-    thread_ids = get_sent_threads(service, limit=50)
+    thread_ids = get_sent_threads(service, limit=args.limit)
     print(f"🔍 Scanning last {len(thread_ids)} sent threads...\n")
 
     followups_needed = 0
@@ -57,8 +65,8 @@ def main():
         print("\nProposed Follow-up:")
         print(followup_text)
         print("-" * 50)
-        action = input("[A] Approve & Create Draft | [S] Skip: ").strip().lower()
-        if action == "a":
+
+        if args.auto:
             create_draft(
                 service=service,
                 thread_id=thread["thread_id"],
@@ -67,9 +75,43 @@ def main():
                 body=followup_text
             )
             drafts_created += 1
-            print("✓ Gmail draft created!\n")
+            print("✓ Draft created automatically!\n")
         else:
-            print("Skipped.\n")
+            print("Press: [A] Approve Draft | [S] Skip | [E] Edit Text | [Q] Quit")
+            key = readchar.readkey().lower()
+
+            if key == "a":
+                create_draft(
+                    service=service,
+                    thread_id=thread["thread_id"],
+                    recipient=thread["recipient"],
+                    subject=thread["subject"],
+                    body=followup_text
+                )
+                drafts_created += 1
+                print("✓ Draft created instantly!\n")
+            
+            elif key == "e":
+                print("\n📝 Type your custom follow-up (or press Enter to keep AI text):")
+
+                custom_body = input("> ").strip()
+                final_body = custom_body if custom_body else followup_text
+
+                create_draft(
+                    service=service,
+                    thread_id=thread["thread_id"],
+                    recipient=thread["recipient"],
+                    subject=thread["subject"],
+                    body=final_body
+                )
+                drafts_created += 1
+                print("✓ Custom draft created!\n")
+
+            elif key == "q":
+                print("\nExiting Nudge...")
+                break
+            else:
+                print("Skipped!\n")
 
     # 7. SUMMARY REPORT
 
@@ -79,6 +121,6 @@ def main():
     print(f"Follow-ups needed: {followups_needed}")
     print(f"Drafts created:    {drafts_created}")
     print("=" * 50)
-    
+
 if __name__ == "__main__":
     main()
