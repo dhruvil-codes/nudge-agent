@@ -63,7 +63,7 @@ def render_welcome_splash(mode_text):
     grid.add_column(ratio=1, justify="center")
     grid.add_row(left_content, right_content)
 
-    console.print(Panel(grid, border_style="cyan", title="[bold white]NUDGE AI[/bold white]", title_align="left"))
+    console.print(Panel(grid, border_style="cyan", title="[bold white]NUDGE AGENT[/bold white]", title_align="left"))
 
 
 def main():
