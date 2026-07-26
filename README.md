@@ -1,8 +1,8 @@
 # 🚀 Nudge — Autonomous AI Gmail Follow-up Agent
 
 [![PyPI Version](https://img.shields.io/pypi/v/nudge-agent?color=cyan&logo=pypi&logoColor=white)](https://pypi.org/project/nudge-agent)
-[![Python Version](https://img.shields.io/pypi/pyversions/nudge-agent?color=blue&logo=python&logoColor=white)](https://pypi.org/project/nudge-agent)
-[![License](https://img.shields.io/github/license/dhruvil-codes/nudge-agent?color=green)](https://github.com/dhruvil-codes/nudge-agent/blob/main/LICENSE)
+[![Python Version](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue?logo=python&logoColor=white)](https://pypi.org/project/nudge-agent)
+[![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/dhruvil-codes/nudge-agent/blob/main/LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/dhruvil-codes/nudge-agent?style=social)](https://github.com/dhruvil-codes/nudge-agent)
 
 **Nudge** is an intelligent, zero-setup CLI agent that audits your sent Gmail threads, identifies unanswered emails, and generates short, natural human follow-up replies using **Groq AI (Llama 3.3 70B)**.

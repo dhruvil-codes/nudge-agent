@@ -7,7 +7,13 @@ name = "nudge-agent"
 version = "0.1.2"
 description = "AI-powered Gmail follow-up CLI agent"
 readme = "README.md"
+license = {text = "MIT"}
 requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
 dependencies = [
     "google-api-python-client",
     "google-auth-httplib2",
