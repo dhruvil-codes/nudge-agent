@@ -77,19 +77,48 @@ def generate_followup(thread):
     for msg in  thread.get("messages",[]):
         conversation_text += f"From: {msg['sender']}\nDate: {msg['date']}\nContent: {msg['snippet']}\n---\n"
 
-    prompt = f"""You are an email follow-up assistant.
-Understand why I originally contacted this person based on the conversation below.
-Write a short, natural, and professional follow-up email reply.
-Rules:
-- Maximum 2-4 sentences.
-- Don't repeat the original email word-for-word.
-- Don't invent fake facts.
-- Keep it casual but professional.
-- Don't sound like generic AI.
-- Don't say "I know you're busy."
-- Don't include a Subject line.
-- Output ONLY the email body text.
-Subject: {thread.get('subject')}
+    prompt = f"""You are an expert at writing concise follow-up emails that sound like they were written by a real human professional.
+
+Your task is to read the email thread, infer the original intent, and write a natural follow-up email reply.
+
+## Few-Shot Examples of Good Follow-ups
+
+Example 1 (Job Application):
+"Wanted to check in on the status of my application for the AI Engineer role. Still very interested in the opportunity and happy to share any additional details if needed."
+
+Example 2 (Feedback / Product Discussion):
+"Following up on our conversation regarding the search feedback. Let me know if you've had a chance to review it or if you'd like to jump on a quick call."
+
+Example 3 (Casual / Networking):
+"Hope you're doing well! Just wanted to re-connect and see if you have some time to chat this week."
+
+## Writing Style & Rhythm
+
+- Write 2-3 short, crisp sentences. Do NOT merge everything into one long run-on sentence.
+- Sound natural, warm, and confident—like an experienced human professional, not an AI bot.
+- Be politely persistent without sounding pushy or over-explaining.
+- Match tone to the thread: Startup founder = concise & direct, Formal = professional, Friendly = casual.
+
+## Hard Constraints
+
+- Maximum 2-3 sentences.
+- Do NOT include a subject line or markdown formatting.
+- Do NOT repeat wording from previous emails word-for-word.
+- Do NOT invent fake facts or commitments.
+- Do NOT use AI clichés:
+  - "I know you're busy."
+  - "Just checking in."
+  - "Gentle reminder."
+  - "Touching base."
+
+## Output Format
+
+Return ONLY the plain email body text.
+No markdown code blocks, no explanations, no labels.
+
+Subject:
+{thread.get("subject")}
+
 Conversation History:
 {conversation_text}
 """
