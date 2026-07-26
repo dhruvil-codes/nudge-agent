@@ -1,4 +1,5 @@
 import os 
+import sys
 import time
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -8,6 +9,45 @@ load_dotenv()
 global_env = os.path.expanduser("~/.nudge/.env")
 if os.path.exists(global_env):
     load_dotenv(dotenv_path=global_env)
+
+
+def ensure_groq_api_key():
+    """Ensure GROQ_API_KEY exists. If missing, prompt user interactively and save to ~/.nudge/.env."""
+    load_dotenv()
+    if os.path.exists(global_env):
+        load_dotenv(dotenv_path=global_env)
+
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        print("\n" + "=" * 65)
+        print("🔑 Welcome to Nudge! A Groq API Key is required for fast AI follow-ups.")
+        print("👉 Get your free API key here: https://console.groq.com/keys")
+        print("=" * 65 + "\n")
+
+        while True:
+            try:
+                key_input = input("Paste your Groq API Key (starts with gsk_): ").strip()
+            except (KeyboardInterrupt, EOFError):
+                print("\nOperation cancelled.")
+                sys.exit(0)
+
+            if key_input.startswith("gsk_") and len(key_input) > 10:
+                api_key = key_input
+                break
+            print("❌ Invalid key format. Groq API keys start with 'gsk_'. Please try again.")
+
+        # Save to ~/.nudge/.env
+        nudge_dir = os.path.expanduser("~/.nudge")
+        os.makedirs(nudge_dir, exist_ok=True)
+        env_file_path = os.path.join(nudge_dir, ".env")
+
+        with open(env_file_path, "a") as f:
+            f.write(f"\nGROQ_API_KEY={api_key}\n")
+
+        os.environ["GROQ_API_KEY"] = api_key
+        print("✓ Groq API Key saved successfully to ~/.nudge/.env!\n")
+
+    return api_key
 
 # Check all messages in the thread. If any message came from someone other than my_email, they replied!
 

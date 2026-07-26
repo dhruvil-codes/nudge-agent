@@ -25,7 +25,8 @@ from gmail_client import (
 
 from followup_agent import (
     should_follow_up,
-    generate_followup
+    generate_followup,
+    ensure_groq_api_key
 )
 
 
@@ -90,7 +91,10 @@ def main():
     
     render_welcome_splash(mode_text)
 
-    # 1. CONNECT GMAIL
+    # 1. ENSURE GROQ API KEY
+    ensure_groq_api_key()
+
+    # 2. CONNECT GMAIL
     service = authenticate_gmail(force_reauth=args.login)
     my_email = get_my_email(service)
     console.print(f"[bold green]✓ Gmail Connected as:[/bold green] [bold yellow]{my_email}[/bold yellow]  [dim](Press [bold cyan]L[/bold cyan] anytime to switch accounts)[/dim]\n")
