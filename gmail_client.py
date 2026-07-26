@@ -35,19 +35,32 @@ DEFAULT_CLIENT_CONFIG = {
     }
 }
 
-SCOPES = ["https://www.googleapis.com/auth/gmail.modify"] 
-
-def authenticate_gmail():
+def logout_gmail():
+    """Delete saved token to force re-authentication on next run."""
     token_path = get_config_path("token.json")
-    creds = None
+    if os.path.exists(token_path):
+        os.remove(token_path)
+    if os.path.exists("token.json"):
+        os.remove("token.json")
 
+
+def authenticate_gmail(force_reauth=False):
+    token_path = get_config_path("token.json")
+    if force_reauth:
+        logout_gmail()
+
+    creds = None
     if os.path.exists(token_path):
         creds = Credentials.from_authorized_user_file(token_path, SCOPES)
 
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
+            try:
+                creds.refresh(Request())
+            except Exception:
+                creds = None
+
+        if not creds:
             creds_file = get_config_path("credentials.json")
             if os.path.exists(creds_file):
                 flow = InstalledAppFlow.from_client_secrets_file(creds_file, SCOPES)

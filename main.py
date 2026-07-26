@@ -19,7 +19,8 @@ from gmail_client import (
     parse_thread,
     create_draft,
     is_thread_processed,
-    record_thread_status
+    record_thread_status,
+    logout_gmail
 )
 
 from followup_agent import (
@@ -47,7 +48,7 @@ def render_welcome_splash(mode_text):
         "[cyan]•[/cyan] Scans sent Gmail threads for unanswered emails\n"
         "[cyan]•[/cyan] Rule engine + SQLite history: skips replies & processed threads\n"
         "[cyan]•[/cyan] Multi-tone AI generator: [1] Check-in | [2] Value-Add | [3] Breakup\n"
-        "[cyan]•[/cyan] Human approval: [bold green][A] Approve[/bold green] | [bold yellow][E] Edit[/bold yellow] | [dim][S] Skip[/dim] | [bold red][Q] Quit[/bold red]"
+        "[cyan]•[/cyan] Human approval: [bold green][A] Approve[/bold green] | [bold yellow][E] Edit[/bold yellow] | [cyan][L] Switch Account[/cyan] | [dim][S] Skip[/dim] | [bold red][Q] Quit[/bold red]"
     )
 
     right_content = (
@@ -74,16 +75,23 @@ def main():
     parser = argparse.ArgumentParser(description="Nudge — AI Gmail Follow-up Agent")
     parser.add_argument("--auto", action="store_true", help="Auto-approve without keypress prompts")
     parser.add_argument("--limit", type=int, default=50, help="Number of sent threads to scan")
+    parser.add_argument("--login", action="store_true", help="Force re-authentication with a new Gmail account")
+    parser.add_argument("--logout", action="store_true", help="Log out of current Gmail account")
     args = parser.parse_args()
+
+    if args.logout:
+        logout_gmail()
+        console.print("[bold green]✓ Logged out successfully![/bold green]")
+        return
 
     mode_text = "[yellow]Batch Auto Mode[/yellow]" if args.auto else "[cyan]Interactive Mode[/cyan]"
     
     render_welcome_splash(mode_text)
 
     # 1. CONNECT GMAIL
-    service = authenticate_gmail()
+    service = authenticate_gmail(force_reauth=args.login)
     my_email = get_my_email(service)
-    console.print(f"[bold green]✓ Gmail Connected as:[/bold green] [bold yellow]{my_email}[/bold yellow]\n")
+    console.print(f"[bold green]✓ Gmail Connected as:[/bold green] [bold yellow]{my_email}[/bold yellow]  [dim](Press [bold cyan]L[/bold cyan] anytime to switch accounts)[/dim]\n")
 
     # 2. GET SENT THREADS
     thread_ids = get_sent_threads(service, limit=args.limit)
@@ -138,7 +146,7 @@ def main():
                 console.print("[bold green]✓ Draft created automatically![/bold green]\n")
                 break
 
-            console.print("Press: [bold green][A] Approve[/bold green] | [bold yellow][E] Edit[/bold yellow] | Tone: [cyan][1] Check-in[/cyan] [cyan][2] Value-Add[/cyan] [cyan][3] Breakup[/cyan] | [dim][S] Skip[/dim] | [bold red][Q] Quit[/bold red]")
+            console.print("Press: [bold green][A] Approve[/bold green] | [bold yellow][E] Edit[/bold yellow] | Tone: [cyan][1] Check-in[/cyan] [cyan][2] Value-Add[/cyan] [cyan][3] Breakup[/cyan] | [bold cyan][L] Switch Account[/bold cyan] | [dim][S] Skip[/dim] | [bold red][Q] Quit[/bold red]")
             key = readchar.readkey().lower()
 
             if key == "a":
@@ -180,6 +188,12 @@ def main():
             elif key == "3":
                 current_goal = "breakup"
                 continue
+            elif key == "l":
+                console.print("\n[yellow]🔑 Switching Gmail Account...[/yellow]")
+                service = authenticate_gmail(force_reauth=True)
+                my_email = get_my_email(service)
+                console.print(f"[bold green]✓ Switched account to:[/bold green] [bold yellow]{my_email}[/bold yellow]\n")
+                break
             elif key == "q":
                 console.print("\n[bold red]Exiting Nudge...[/bold red]")
                 return
