@@ -1,9 +1,16 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: nudge-agent
 Version: 0.1.0
 Summary: AI-powered Gmail follow-up CLI agent
 Requires-Python: >=3.9
 Description-Content-Type: text/markdown
+Requires-Dist: google-api-python-client
+Requires-Dist: google-auth-httplib2
+Requires-Dist: google-auth-oauthlib
+Requires-Dist: openai
+Requires-Dist: python-dotenv
+Requires-Dist: readchar
+Requires-Dist: rich
 
 # 🚀 Nudge — AI Gmail Follow-up Agent
 
