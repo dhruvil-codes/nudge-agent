@@ -92,6 +92,7 @@ nudge/
 
 * **Local Storage**: Your Google token (`token.json`), SQLite database (`history.db`), and local state are stored **100% locally on your computer** inside `~/.nudge/`.
 * **Draft Mode Guarantee**: Nudge attaches approved replies as **drafts** inside your Gmail account so you maintain 100% control before sending.
+* **Privacy Policy**: Read our complete [Privacy Policy](PRIVACY.md).
 
 ---
 
