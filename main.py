@@ -17,7 +17,9 @@ from gmail_client import (
     get_sent_threads,
     get_thread,
     parse_thread,
-    create_draft
+    create_draft,
+    is_thread_processed,
+    record_thread_status
 )
 
 from followup_agent import (
@@ -43,8 +45,8 @@ def render_welcome_splash(mode_text):
         "[dim cyan]built by @bydhruvil ;)[/dim cyan]\n\n"
         "[bold yellow]✨ What Nudge can do:[/bold yellow]\n"
         "[cyan]•[/cyan] Scans sent Gmail threads for unanswered emails\n"
-        "[cyan]•[/cyan] Rule engine: skips replies, <3 days, or 2+ follow-ups\n"
-        "[cyan]•[/cyan] Generates short, natural follow-up drafts\n"
+        "[cyan]•[/cyan] Rule engine + SQLite history: skips replies & processed threads\n"
+        "[cyan]•[/cyan] Multi-tone AI generator: [1] Check-in | [2] Value-Add | [3] Breakup\n"
         "[cyan]•[/cyan] Human approval: [bold green][A] Approve[/bold green] | [bold yellow][E] Edit[/bold yellow] | [dim][S] Skip[/dim] | [bold red][Q] Quit[/bold red]"
     )
 
@@ -92,6 +94,10 @@ def main():
 
     # 3. PROCESS EACH THREAD
     for thread_id in thread_ids:
+        # Check SQLite history
+        if is_thread_processed(thread_id):
+            continue
+
         raw_thread = get_thread(service, thread_id)
         thread = parse_thread(raw_thread, my_email)
 
@@ -103,31 +109,36 @@ def main():
             continue
 
         followups_needed += 1
+        current_goal = "check_in"
 
-        # 5. AI GENERATION
-        console.print("[magenta]🤖 Generating follow-up with Groq AI...[/magenta]")
-        followup_text = generate_followup(thread)
+        # 5. AI GENERATION LOOP (ALLOW REGENERATING TONES)
+        while True:
+            console.print(f"[magenta]🤖 Generating follow-up ({current_goal.replace('_', ' ').title()})...[/magenta]")
+            followup_text = generate_followup(thread, goal=current_goal)
 
-        # 6. DISPLAY & HUMAN APPROVAL
-        card_content = (
-            f"[bold cyan]To:[/bold cyan] {thread['recipient']}\n"
-            f"[bold cyan]Subject:[/bold cyan] {thread['subject']}\n\n"
-            f"[italic white]{followup_text}[/italic white]"
-        )
-        console.print(Panel(card_content, title="[bold yellow]Proposed Follow-up[/bold yellow]", border_style="yellow"))
-
-        if args.auto:
-            create_draft(
-                service=service,
-                thread_id=thread["thread_id"],
-                recipient=thread["recipient"],
-                subject=thread["subject"],
-                body=followup_text
+            # 6. DISPLAY CARD
+            card_content = (
+                f"[bold cyan]To:[/bold cyan] {thread['recipient']}\n"
+                f"[bold cyan]Subject:[/bold cyan] {thread['subject']}\n"
+                f"[bold cyan]Tone:[/bold cyan] [yellow]{current_goal.replace('_', ' ').title()}[/yellow]\n\n"
+                f"[italic white]{followup_text}[/italic white]"
             )
-            drafts_created += 1
-            console.print("[bold green]✓ Draft created automatically![/bold green]\n")
-        else:
-            console.print("Press: [bold green][A] Approve[/bold green] | [bold yellow][E] Edit[/bold yellow] | [dim][S] Skip[/dim] | [bold red][Q] Quit[/bold red]")
+            console.print(Panel(card_content, title="[bold yellow]Proposed Follow-up[/bold yellow]", border_style="yellow"))
+
+            if args.auto:
+                create_draft(
+                    service=service,
+                    thread_id=thread["thread_id"],
+                    recipient=thread["recipient"],
+                    subject=thread["subject"],
+                    body=followup_text
+                )
+                record_thread_status(thread["thread_id"], "DRAFT_CREATED", thread["recipient"], thread["subject"])
+                drafts_created += 1
+                console.print("[bold green]✓ Draft created automatically![/bold green]\n")
+                break
+
+            console.print("Press: [bold green][A] Approve[/bold green] | [bold yellow][E] Edit[/bold yellow] | Tone: [cyan][1] Check-in[/cyan] [cyan][2] Value-Add[/cyan] [cyan][3] Breakup[/cyan] | [dim][S] Skip[/dim] | [bold red][Q] Quit[/bold red]")
             key = readchar.readkey().lower()
 
             if key == "a":
@@ -138,8 +149,10 @@ def main():
                     subject=thread["subject"],
                     body=followup_text
                 )
+                record_thread_status(thread["thread_id"], "DRAFT_CREATED", thread["recipient"], thread["subject"])
                 drafts_created += 1
                 console.print("[bold green]✓ Draft created instantly![/bold green]\n")
+                break
 
             elif key == "e":
                 console.print("\n[bold yellow]📝 Type your custom follow-up (or press Enter to keep AI text):[/bold yellow]")
@@ -153,14 +166,27 @@ def main():
                     subject=thread["subject"],
                     body=final_body
                 )
+                record_thread_status(thread["thread_id"], "DRAFT_CREATED", thread["recipient"], thread["subject"])
                 drafts_created += 1
                 console.print("[bold green]✓ Custom draft created![/bold green]\n")
+                break
 
+            elif key == "1":
+                current_goal = "check_in"
+                continue
+            elif key == "2":
+                current_goal = "value_add"
+                continue
+            elif key == "3":
+                current_goal = "breakup"
+                continue
             elif key == "q":
                 console.print("\n[bold red]Exiting Nudge...[/bold red]")
-                break
+                return
             else:
+                record_thread_status(thread["thread_id"], "SKIPPED", thread["recipient"], thread["subject"])
                 console.print("[dim]Skipped![/dim]\n")
+                break
 
     # 7. SUMMARY REPORT
     table = Table(title="🎉 NUDGE SUMMARY REPORT", border_style="magenta")

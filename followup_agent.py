@@ -60,37 +60,47 @@ def should_follow_up(thread, my_email):
     return True
 
 
-def generate_followup(thread):
-    """Generate a short follow-up email using Groq"""
+GOAL_INSTRUCTIONS = {
+    "check_in": "Goal: Write a short, warm, and professional check-in asking for a status update.",
+    "value_add": "Goal: Write a value-add follow-up that concisely shares a relevant accomplishment, project update, or helpful insight.",
+    "breakup": "Goal: Write a polite 'breakup' email stating this will be your last follow-up so you don't clutter their inbox, giving them a low-pressure way to reply."
+}
+
+
+def generate_followup(thread, goal="check_in"):
+    """Generate a short follow-up email using Groq with customizable goal tone."""
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise ValueError("Please set GROQ_API_KEY in your .env file")
 
-    # groq open ai compatibility endpoint
-
     client = OpenAI(
         base_url="https://api.groq.com/openai/v1",
-        api_key= api_key
+        api_key=api_key
     )
 
     conversation_text = ""
-    for msg in  thread.get("messages",[]):
-        conversation_text += f"From: {msg['sender']}\nDate: {msg['date']}\nContent: {msg['snippet']}\n---\n"
+    for msg in thread.get("messages", []):
+        content = msg.get("body") or msg.get("snippet", "")
+        conversation_text += f"From: {msg['sender']}\nDate: {msg['date']}\nContent: {content}\n---\n"
+
+    goal_prompt = GOAL_INSTRUCTIONS.get(goal, GOAL_INSTRUCTIONS["check_in"])
 
     prompt = f"""You are an expert at writing concise follow-up emails that sound like they were written by a real human professional.
 
 Your task is to read the email thread, infer the original intent, and write a natural follow-up email reply.
 
+{goal_prompt}
+
 ## Few-Shot Examples of Good Follow-ups
 
-Example 1 (Job Application):
+Example 1 (Job Application - Check-in):
 "Wanted to check in on the status of my application for the AI Engineer role. Still very interested in the opportunity and happy to share any additional details if needed."
 
-Example 2 (Feedback / Product Discussion):
-"Following up on our conversation regarding the search feedback. Let me know if you've had a chance to review it or if you'd like to jump on a quick call."
+Example 2 (Product Feedback - Value Add):
+"Following up on our conversation regarding the search feedback. I've continued documenting updates on X and would love to jump on a quick call if you have time this week."
 
-Example 3 (Casual / Networking):
-"Hope you're doing well! Just wanted to re-connect and see if you have some time to chat this week."
+Example 3 (Polite Breakup):
+"Wanted to send one last note regarding my application. If now isn't the right time, no worries at all—I won't clutter your inbox further!"
 
 ## Writing Style & Rhythm
 
@@ -124,8 +134,8 @@ Conversation History:
 """
 
     response = client.chat.completions.create(
-        model = "llama-3.3-70b-versatile",
-        messages = [
+        model="llama-3.3-70b-versatile",
+        messages=[
             {"role": "system", "content": "You are a professional email follow-up writer."},
             {"role": "user", "content": prompt}
         ],

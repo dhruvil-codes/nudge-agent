@@ -87,6 +87,50 @@ def get_thread(service, thread_id):
 
 # thats why we are using this to loop through the string and get the header
 
+import sqlite3
+
+HISTORY_DB_PATH = get_config_path("history.db")
+
+def init_history_db():
+    """Initialize SQLite database for tracking processed threads."""
+    conn = sqlite3.connect(HISTORY_DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS thread_history (
+            thread_id TEXT PRIMARY KEY,
+            status TEXT NOT NULL,
+            recipient TEXT,
+            subject TEXT,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+def is_thread_processed(thread_id):
+    """Check if thread was already drafted or skipped."""
+    conn = sqlite3.connect(HISTORY_DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT status FROM thread_history WHERE thread_id = ?", (thread_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return row is not None
+
+def record_thread_status(thread_id, status, recipient="", subject=""):
+    """Record user decision (DRAFT_CREATED or SKIPPED) in SQLite database."""
+    conn = sqlite3.connect(HISTORY_DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT OR REPLACE INTO thread_history (thread_id, status, recipient, subject, updated_at)
+        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+    """, (thread_id, status, recipient, subject))
+    conn.commit()
+    conn.close()
+
+# Initialize DB on load
+init_history_db()
+
+
 def _get_header(headers, name):
     """Helper to find a specific header value like 'Subject' or 'From'."""
     for header in headers:
@@ -95,32 +139,64 @@ def _get_header(headers, name):
     return "" #Return empty string if header not found
 
 
+def _extract_message_body(payload, snippet=""):
+    """Recursively unpack plain text body from Gmail message payload."""
+    if not payload:
+        return snippet
+
+    body_data = ""
+    parts = payload.get("parts", [])
+
+    if parts:
+        for part in parts:
+            mime_type = part.get("mimeType", "")
+            if mime_type == "text/plain":
+                body_data = part.get("body", {}).get("data", "")
+                if body_data:
+                    break
+            elif "parts" in part:
+                body_data = _extract_message_body(part, "")
+                if body_data:
+                    break
+
+    if not body_data:
+        body_data = payload.get("body", {}).get("data", "")
+
+    if body_data:
+        try:
+            decoded_bytes = base64.urlsafe_b64encode(body_data.encode("utf-8")) if isinstance(body_data, str) else body_data
+            # Gmail uses base64url encoding
+            decoded_text = base64.urlsafe_b64decode(body_data).decode("utf-8", errors="ignore").strip()
+            return decoded_text if decoded_text else snippet
+        except Exception:
+            return snippet
+
+    return snippet or ""
+
+
 def parse_thread(thread, my_email):
     """Extract clean thread details: subject, recipient and message history"""
     messages = thread.get("messages", [])
     if not messages:
         return None
     
-    #Finds the first message in the conversation.
-    #Pulling out the Subject line and the recipient's To email address.
     first_msg_headers = messages[0].get("payload", {}).get("headers", [])
     subject = _get_header(first_msg_headers, "Subject") or "(No Subject)"
     to_add = _get_header(first_msg_headers, "To")
 
-    # Determine who is the recipient (the one who is not me)
-
-    #Loops through all replies (for msg in messages:):
     parse_messages = []
     for msg in messages:
-        headers = msg.get("payload", {}).get("headers", [])
+        payload = msg.get("payload", {})
+        headers = payload.get("headers", [])
+        body_text = _extract_message_body(payload, msg.get("snippet", ""))
         parse_messages.append({
             "sender": _get_header(headers, "From"),
             "date": _get_header(headers, "Date"),
             "snippet": msg.get("snippet", ""),
+            "body": body_text,
             "internalDate": int(msg.get("internalDate", 0))  # timestamp in ms
         })
 
-    #Returns a clean, ready-to-use dictionary:
     return {
         "thread_id": thread["id"],
         "subject": subject,
