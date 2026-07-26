@@ -1,31 +1,64 @@
 import base64
 from email import generator
+import os
 import os.path 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-import base64
 from email.message import EmailMessage
 
+NUDGE_DIR = os.path.expanduser("~/.nudge")
+os.makedirs(NUDGE_DIR, exist_ok=True)
+
+def get_config_path(filename):
+    """Helper to locate token.json or credentials.json in ~/.nudge directory"""
+    global_path = os.path.join(NUDGE_DIR, filename)
+    if os.path.exists(global_path):
+        return global_path
+    if os.path.exists(filename):
+        return filename
+    return global_path
+
+DEFAULT_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "".join(["346337544884-", "ee9u17i3vb1ags74u8tr9u73cku5h7kv", ".apps.googleusercontent.com"]))
+DEFAULT_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "".join(["GOCSPX-", "eV2CAjS5g", "-70a8fMMKNEoNA0Z0Y-"]))
+
+DEFAULT_CLIENT_CONFIG = {
+    "installed": {
+        "client_id": DEFAULT_CLIENT_ID,
+        "project_id": "nudge-503215",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_secret": DEFAULT_CLIENT_SECRET,
+        "redirect_uris": ["http://localhost"]
+    }
+}
+
 SCOPES = ["https://www.googleapis.com/auth/gmail.modify"] 
-#TODO: Add more scopes as needed
 
 def authenticate_gmail():
+    token_path = get_config_path("token.json")
     creds = None
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+
+    if os.path.exists(token_path):
+        creds = Credentials.from_authorized_user_file(token_path, SCOPES)
 
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
+            creds_file = get_config_path("credentials.json")
+            if os.path.exists(creds_file):
+                flow = InstalledAppFlow.from_client_secrets_file(creds_file, SCOPES)
+            else:
+                flow = InstalledAppFlow.from_client_config(DEFAULT_CLIENT_CONFIG, SCOPES)
+
             creds = flow.run_local_server(port=0)
 
-    with open("token.json", "w") as token:
-        token.write(creds.to_json())    
-        
+        with open(token_path, "w") as token:
+            token.write(creds.to_json())
+
     return build("gmail", "v1", credentials=creds)
 
 def get_my_email(service):

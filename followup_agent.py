@@ -1,13 +1,13 @@
-from googleapiclient import model
-from openai.types.conversations import conversation
-from openai import api_key
 import os 
+import time
 from dotenv import load_dotenv
 from openai import OpenAI
-from email import message
-import time
 
+# Load .env from current folder, or fallback to ~/.nudge/.env
 load_dotenv()
+global_env = os.path.expanduser("~/.nudge/.env")
+if os.path.exists(global_env):
+    load_dotenv(dotenv_path=global_env)
 
 # Check all messages in the thread. If any message came from someone other than my_email, they replied!
 
