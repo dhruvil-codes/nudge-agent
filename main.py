@@ -96,128 +96,166 @@ def main():
 
     # 2. CONNECT GMAIL
     service = authenticate_gmail(force_reauth=args.login)
-    my_email = get_my_email(service)
-    console.print(f"[bold green]✓ Gmail Connected as:[/bold green] [bold yellow]{my_email}[/bold yellow]  [dim](Press [bold cyan]L[/bold cyan] anytime to switch accounts)[/dim]\n")
 
-    # 2. GET SENT THREADS
-    thread_ids = get_sent_threads(service, limit=args.limit)
-    console.print(f"[cyan]🔍 Scanning last {len(thread_ids)} sent threads...[/cyan]\n")
+    while True:
+        my_email = get_my_email(service)
+        console.print(f"[bold green]✓ Gmail Connected as:[/bold green] [bold yellow]{my_email}[/bold yellow]  [dim](Press [bold cyan]L[/bold cyan] anytime to switch accounts)[/dim]\n")
 
-    followups_needed = 0
-    drafts_created = 0
+        # 3. GET SENT THREADS
+        thread_ids = get_sent_threads(service, limit=args.limit)
+        console.print(f"[cyan]🔍 Scanning last {len(thread_ids)} sent threads...[/cyan]\n")
 
-    # 3. PROCESS EACH THREAD
-    for thread_id in thread_ids:
-        # Check SQLite history
-        if is_thread_processed(thread_id):
+        followups_needed = 0
+        drafts_created = 0
+        user_requested_account_switch = False
+
+        # 4. PROCESS EACH THREAD
+        for thread_id in thread_ids:
+            # Check SQLite history
+            if is_thread_processed(thread_id):
+                continue
+
+            raw_thread = get_thread(service, thread_id)
+            thread = parse_thread(raw_thread, my_email)
+
+            if not thread:
+                continue
+
+            # DECISION ENGINE
+            if not should_follow_up(thread, my_email):
+                continue
+
+            followups_needed += 1
+            current_goal = "check_in"
+
+            # AI GENERATION LOOP (ALLOW REGENERATING TONES)
+            while True:
+                console.print(f"[magenta]🤖 Generating follow-up ({current_goal.replace('_', ' ').title()})...[/magenta]")
+                followup_text = generate_followup(thread, goal=current_goal)
+
+                # DISPLAY CARD
+                card_content = (
+                    f"[bold cyan]To:[/bold cyan] {thread['recipient']}\n"
+                    f"[bold cyan]Subject:[/bold cyan] {thread['subject']}\n"
+                    f"[bold cyan]Tone:[/bold cyan] {current_goal.replace('_', ' ').title()}\n\n"
+                    f"{followup_text}"
+                )
+                console.print(Panel(card_content, title="[bold yellow]Proposed Follow-up[/bold yellow]", border_style="yellow"))
+
+                if args.auto:
+                    create_draft(
+                        service=service,
+                        thread_id=thread["thread_id"],
+                        recipient=thread["recipient"],
+                        subject=thread["subject"],
+                        body=followup_text
+                    )
+                    record_thread_status(thread["thread_id"], "DRAFT_CREATED", thread["recipient"], thread["subject"])
+                    drafts_created += 1
+                    console.print("[bold green]✓ Draft created automatically![/bold green]\n")
+                    break
+
+                console.print("Press: [bold green][A] Approve[/bold green] | [bold yellow][E] Edit[/bold yellow] | Tone: [cyan][1] Check-in[/cyan] [cyan][2] Value-Add[/cyan] [cyan][3] Breakup[/cyan] | [bold cyan][L] Switch Account[/bold cyan] | [dim][S] Skip[/dim] | [bold red][Q] Quit[/bold red]")
+                try:
+                    key = readchar.readkey().lower()
+                except (KeyboardInterrupt, EOFError):
+                    console.print("\n[bold red]Exiting Nudge...[/bold red]")
+                    return
+
+                if key == "a":
+                    create_draft(
+                        service=service,
+                        thread_id=thread["thread_id"],
+                        recipient=thread["recipient"],
+                        subject=thread["subject"],
+                        body=followup_text
+                    )
+                    record_thread_status(thread["thread_id"], "DRAFT_CREATED", thread["recipient"], thread["subject"])
+                    drafts_created += 1
+                    console.print("[bold green]✓ Draft created instantly![/bold green]\n")
+                    break
+
+                elif key == "e":
+                    console.print("\n[bold yellow]📝 Type your custom follow-up (or press Enter to keep AI text):[/bold yellow]")
+                    custom_body = input("> ").strip()
+                    final_body = custom_body if custom_body else followup_text
+
+                    create_draft(
+                        service=service,
+                        thread_id=thread["thread_id"],
+                        recipient=thread["recipient"],
+                        subject=thread["subject"],
+                        body=final_body
+                    )
+                    record_thread_status(thread["thread_id"], "DRAFT_CREATED", thread["recipient"], thread["subject"])
+                    drafts_created += 1
+                    console.print("[bold green]✓ Custom draft created![/bold green]\n")
+                    break
+
+                elif key == "1":
+                    current_goal = "check_in"
+                    continue
+                elif key == "2":
+                    current_goal = "value_add"
+                    continue
+                elif key == "3":
+                    current_goal = "breakup"
+                    continue
+                elif key == "l":
+                    console.print("\n[yellow]🔑 Switching Gmail Account...[/yellow]")
+                    logout_gmail()
+                    service = authenticate_gmail(force_reauth=True)
+                    user_requested_account_switch = True
+                    break
+                elif key == "q":
+                    console.print("\n[bold red]Exiting Nudge...[/bold red]")
+                    return
+                else:
+                    record_thread_status(thread["thread_id"], "SKIPPED", thread["recipient"], thread["subject"])
+                    console.print("[dim]Skipped![/dim]\n")
+                    break
+
+            if user_requested_account_switch:
+                break
+
+        if user_requested_account_switch:
             continue
 
-        raw_thread = get_thread(service, thread_id)
-        thread = parse_thread(raw_thread, my_email)
+        # 5. SUMMARY REPORT
+        table = Table(title="🎉 NUDGE SUMMARY REPORT", border_style="magenta")
+        table.add_column("Metric", style="cyan", justify="left")
+        table.add_column("Count", style="bold green", justify="right")
 
-        if not thread:
+        table.add_row("Threads Scanned", str(len(thread_ids)))
+        table.add_row("Follow-ups Needed", str(followups_needed))
+        table.add_row("Drafts Created", str(drafts_created))
+
+        console.print(table)
+
+        if args.auto:
+            return
+
+        console.print("\nPress: [bold cyan][L] Switch Account[/bold cyan] | [bold green][R] Rescan Inbox[/bold green] | [bold red][Q] Quit[/bold red]")
+        try:
+            post_key = readchar.readkey().lower()
+        except (KeyboardInterrupt, EOFError):
+            console.print("\n[bold red]Exiting Nudge...[/bold red]")
+            return
+
+        if post_key == "l":
+            console.print("\n[yellow]🔑 Switching Gmail Account...[/yellow]")
+            logout_gmail()
+            service = authenticate_gmail(force_reauth=True)
             continue
-
-        # 4. DECISION ENGINE
-        if not should_follow_up(thread, my_email):
+        elif post_key == "r":
+            console.print("\n[cyan]🔄 Rescanning Inbox...[/cyan]\n")
             continue
-
-        followups_needed += 1
-        current_goal = "check_in"
-
-        # 5. AI GENERATION LOOP (ALLOW REGENERATING TONES)
-        while True:
-            console.print(f"[magenta]🤖 Generating follow-up ({current_goal.replace('_', ' ').title()})...[/magenta]")
-            followup_text = generate_followup(thread, goal=current_goal)
-
-            # 6. DISPLAY CARD
-            card_content = (
-                f"[bold cyan]To:[/bold cyan] {thread['recipient']}\n"
-                f"[bold cyan]Subject:[/bold cyan] {thread['subject']}\n"
-                f"[bold cyan]Tone:[/bold cyan] [yellow]{current_goal.replace('_', ' ').title()}[/yellow]\n\n"
-                f"[italic white]{followup_text}[/italic white]"
-            )
-            console.print(Panel(card_content, title="[bold yellow]Proposed Follow-up[/bold yellow]", border_style="yellow"))
-
-            if args.auto:
-                create_draft(
-                    service=service,
-                    thread_id=thread["thread_id"],
-                    recipient=thread["recipient"],
-                    subject=thread["subject"],
-                    body=followup_text
-                )
-                record_thread_status(thread["thread_id"], "DRAFT_CREATED", thread["recipient"], thread["subject"])
-                drafts_created += 1
-                console.print("[bold green]✓ Draft created automatically![/bold green]\n")
-                break
-
-            console.print("Press: [bold green][A] Approve[/bold green] | [bold yellow][E] Edit[/bold yellow] | Tone: [cyan][1] Check-in[/cyan] [cyan][2] Value-Add[/cyan] [cyan][3] Breakup[/cyan] | [bold cyan][L] Switch Account[/bold cyan] | [dim][S] Skip[/dim] | [bold red][Q] Quit[/bold red]")
-            key = readchar.readkey().lower()
-
-            if key == "a":
-                create_draft(
-                    service=service,
-                    thread_id=thread["thread_id"],
-                    recipient=thread["recipient"],
-                    subject=thread["subject"],
-                    body=followup_text
-                )
-                record_thread_status(thread["thread_id"], "DRAFT_CREATED", thread["recipient"], thread["subject"])
-                drafts_created += 1
-                console.print("[bold green]✓ Draft created instantly![/bold green]\n")
-                break
-
-            elif key == "e":
-                console.print("\n[bold yellow]📝 Type your custom follow-up (or press Enter to keep AI text):[/bold yellow]")
-                custom_body = input("> ").strip()
-                final_body = custom_body if custom_body else followup_text
-
-                create_draft(
-                    service=service,
-                    thread_id=thread["thread_id"],
-                    recipient=thread["recipient"],
-                    subject=thread["subject"],
-                    body=final_body
-                )
-                record_thread_status(thread["thread_id"], "DRAFT_CREATED", thread["recipient"], thread["subject"])
-                drafts_created += 1
-                console.print("[bold green]✓ Custom draft created![/bold green]\n")
-                break
-
-            elif key == "1":
-                current_goal = "check_in"
-                continue
-            elif key == "2":
-                current_goal = "value_add"
-                continue
-            elif key == "3":
-                current_goal = "breakup"
-                continue
-            elif key == "l":
-                console.print("\n[yellow]🔑 Switching Gmail Account...[/yellow]")
-                service = authenticate_gmail(force_reauth=True)
-                my_email = get_my_email(service)
-                console.print(f"[bold green]✓ Switched account to:[/bold green] [bold yellow]{my_email}[/bold yellow]\n")
-                break
-            elif key == "q":
-                console.print("\n[bold red]Exiting Nudge...[/bold red]")
-                return
-            else:
-                record_thread_status(thread["thread_id"], "SKIPPED", thread["recipient"], thread["subject"])
-                console.print("[dim]Skipped![/dim]\n")
-                break
-
-    # 7. SUMMARY REPORT
-    table = Table(title="🎉 NUDGE SUMMARY REPORT", border_style="magenta")
-    table.add_column("Metric", style="cyan", justify="left")
-    table.add_column("Count", style="bold green", justify="right")
-
-    table.add_row("Threads Scanned", str(len(thread_ids)))
-    table.add_row("Follow-ups Needed", str(followups_needed))
-    table.add_row("Drafts Created", str(drafts_created))
-
-    console.print(table)
+        elif post_key == "q":
+            console.print("\n[bold red]Exiting Nudge...[/bold red]")
+            return
+        else:
+            console.print("\n[bold red]Exiting Nudge...[/bold red]")
+            return
 
 
 if __name__ == "__main__":
