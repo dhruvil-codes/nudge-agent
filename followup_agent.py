@@ -91,7 +91,7 @@ def should_follow_up(thread, my_email):
     if recipient_has_replied(thread, my_email):
         return False
 
-    if days_since_last_sent(thread) <= 3:
+    if days_since_last_sent(thread) < 2:
         return False
 
     if count_my_followups(thread, my_email) >=2:

@@ -26,7 +26,7 @@ Designed for job hunters, founders, recruiters, and sales teams who want to foll
   - `[3] Breakup`: Sends a polite final note to give the recipient a low-pressure way to respond.
 - 🧠 **Smart Decision Engine**:
   - Skips threads where the recipient already replied.
-  - Skips threads sent `< 3 days` ago.
+  - Skips threads sent `< 2 days` ago.
   - Skips threads where you've already sent `2+` follow-ups.
 - ⌨️ **Single Keypress CLI Control**: Approve (`[A]`), Edit (`[E]`), Change Tone (`[1]`, `[2]`, `[3]`), Switch Account (`[L]`), Skip (`[S]`), or Quit (`[Q]`).
 
