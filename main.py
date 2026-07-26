@@ -53,19 +53,19 @@ def render_welcome_splash(mode_text):
 
     right_content = (
         "\n"
-        "  [yellow]✦[/yellow]   .  [bold white]*[/bold white]  [magenta]✧[/magenta]  .   [cyan]✦[/cyan]  .  [bold white]*[/bold white]\n"
-        "    .  [cyan]✦[/cyan]  ˚   .  [magenta]✦[/magenta]  [bold white]*[/bold white]  .  [yellow]✦[/yellow]\n"
-        "  [magenta]✧[/magenta]   .  [bold white]*[/bold white]  [yellow]✦[/yellow]  .   [cyan]˚[/cyan]  .  [magenta]✧[/magenta]\n"
-        "    [cyan]✦[/cyan]  .  [bold white]*[/bold white]  .  [magenta]✦[/magenta]  [yellow]✦[/yellow]  .  [bold white]*[/bold white]\n"
-        "  .   [magenta]✧[/magenta]   [yellow]✦[/yellow]  .  [bold white]*[/bold white]  .  [cyan]✦[/cyan]  .\n"
-        "    [yellow]✦[/yellow]  .  [cyan]˚[/cyan]   .  [magenta]✧[/magenta]  [bold white]*[/bold white]  .   [yellow]✦[/yellow]\n"
-        "  [bold white]*[/bold white]   .  [magenta]✦[/magenta]  [yellow]✦[/yellow]  .   [cyan]✦[/cyan]  .  [bold white]*[/bold white]\n"
-        "    [cyan]✦[/cyan]  .  [bold white]*[/bold white]  .  [yellow]✧[/yellow]  .   [magenta]✦[/magenta]  [yellow]˚[/yellow]\n"
+        "  [yellow]✦[/yellow]  .  [bold white]*[/bold white]  [magenta]✧[/magenta]\n"
+        "  .  [cyan]✦[/cyan]  ˚   [magenta]✦[/magenta]\n"
+        "  [magenta]✧[/magenta]  .  [bold white]*[/bold white]  [yellow]✦[/yellow]\n"
+        "  [cyan]✦[/cyan]  .  [bold white]*[/bold white]  [magenta]✦[/magenta]\n"
+        "  .  [magenta]✧[/magenta]  [yellow]✦[/yellow]  .\n"
+        "  [yellow]✦[/yellow]  .  [cyan]˚[/cyan]   [magenta]✧[/magenta]\n"
+        "  [bold white]*[/bold white]  .  [magenta]✦[/magenta]  [yellow]✦[/yellow]\n"
+        "  [cyan]✦[/cyan]  .  [bold white]*[/bold white]  [yellow]✧[/yellow]\n"
     )
 
     grid = Table.grid(expand=True)
-    grid.add_column(ratio=2)
-    grid.add_column(ratio=1, justify="center")
+    grid.add_column(ratio=3)
+    grid.add_column(ratio=1, justify="right")
     grid.add_row(left_content, right_content)
 
     console.print(Panel(grid, border_style="cyan", title="[bold white]NUDGE AGENT[/bold white]", title_align="left"))
