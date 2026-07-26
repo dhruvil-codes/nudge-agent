@@ -35,6 +35,9 @@ DEFAULT_CLIENT_CONFIG = {
     }
 }
 
+SCOPES = ["https://www.googleapis.com/auth/gmail.modify"]
+
+
 def logout_gmail():
     """Delete saved token to force re-authentication on next run."""
     token_path = get_config_path("token.json")
