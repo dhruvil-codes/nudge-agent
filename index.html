@@ -3,33 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nudge — Autonomous AI Gmail Follow-up Agent</title>
+    <title>nudge — Autonomous AI Gmail Follow-up Agent</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #f8fafc; max-width: 800px; margin: 0 auto; padding: 40px 20px; line-height: 1.6; }
-        h1 { color: #38bdf8; font-size: 2.2rem; }
+        h1 { color: #38bdf8; font-size: 2.5rem; margin-bottom: 4px; }
         h2 { color: #f1f5f9; margin-top: 0; }
         a { color: #38bdf8; text-decoration: none; }
         a:hover { text-decoration: underline; }
         .card { background: #1e293b; border-radius: 12px; padding: 24px; margin-top: 20px; border: 1px solid #334155; }
         code { background: #0f172a; padding: 4px 8px; border-radius: 4px; color: #38bdf8; font-family: monospace; }
         pre { background: #0f172a; padding: 12px; border-radius: 8px; overflow-x: auto; }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 8px; }
     </style>
 </head>
 <body>
-    <h1>🚀 Nudge — AI Gmail Follow-up Agent</h1>
-    <p>Nudge is an autonomous CLI agent that audits sent Gmail threads and generates smart follow-up drafts using Groq AI (Llama 3.3 70B).</p>
+    <h1>nudge</h1>
+    <p style="font-size: 1.2rem; color: #94a3b8; margin-top: 0;">Autonomous AI Gmail Follow-up CLI Agent</p>
+
+    <div class="card">
+        <h2>App Purpose & Functionality</h2>
+        <p><strong>nudge</strong> is an open-source command-line application that helps users manage email follow-ups efficiently. The app requests access to Google user data to perform the following core tasks:</p>
+        <ul>
+            <li><strong>Scanning Sent Threads</strong>: Audits sent Gmail threads to identify unanswered emails that require a follow-up.</li>
+            <li><strong>Rule Filtering</strong>: Automatically skips threads where the recipient already replied or where emails were sent within 3 days.</li>
+            <li><strong>Draft Generation</strong>: Generates short, natural 2-3 sentence follow-up replies and attaches them as <strong>drafts only</strong> inside your Gmail account for human-in-the-loop approval.</li>
+        </ul>
+    </div>
 
     <div class="card">
         <h2>🔒 Privacy Policy</h2>
-        <p>Nudge processes email data 100% locally on your computer. Tokens and database history stay inside <code>~/.nudge/</code> on your machine. Nudge never automatically sends emails—it attaches drafts to your Gmail inbox for human-in-the-loop approval.</p>
+        <p>nudge operates 100% locally on your computer. Your authentication tokens, local state, and SQLite history are stored inside <code>~/.nudge/</code> on your machine. nudge never automatically sends emails without explicit human interaction.</p>
         <p>Read our full <a href="PRIVACY.md">Privacy Policy</a>.</p>
     </div>
 
     <div class="card">
-        <h2>📦 Quick Installation</h2>
+        <h2>📦 Installation & Source Code</h2>
         <pre><code>pip install nudge-agent
 nudge</code></pre>
-        <p>View full open-source code on <a href="https://github.com/dhruvil-codes/nudge-agent">GitHub</a>.</p>
+        <p>View open-source repository on <a href="https://github.com/dhruvil-codes/nudge-agent">GitHub</a>.</p>
     </div>
 </body>
 </html>
