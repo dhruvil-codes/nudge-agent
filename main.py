@@ -63,8 +63,6 @@ def render_welcome_splash(mode_text):
         "  [cyan]✦[/cyan]   .   [bold white]*[/bold white]   .   [yellow]✧[/yellow]   .   [magenta]✦[/magenta]\n"
         "  [yellow]✦[/yellow]   .   [magenta]✧[/magenta]   .   [cyan]✦[/cyan]   [bold white]*[/bold white]\n"
         "  .   [bold white]*[/bold white]   [cyan]✦[/cyan]   ˚   .   [magenta]✦[/magenta]\n"
-        "  [magenta]✧[/magenta]   .   [yellow]✦[/yellow]   .   [cyan]˚[/cyan]   .   [magenta]✧[/magenta]\n"
-        "  [cyan]✦[/cyan]   .   [bold white]*[/bold white]   .   [magenta]✦[/magenta]   .   [bold white]*[/bold white]"
     )
 
     grid = Table.grid(expand=True)
