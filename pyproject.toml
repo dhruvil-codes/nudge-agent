@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nudge-agent"
-version = "0.1.7"
+version = "0.2.0"
 description = "AI-powered Gmail follow-up CLI agent"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -21,11 +21,13 @@ dependencies = [
     "openai",
     "python-dotenv",
     "readchar",
-    "rich"
+    "rich",
+    "mcp>=1.0.0"
 ]
 
 [tool.setuptools]
-py-modules = ["main", "gmail_client", "followup_agent"]
+py-modules = ["main", "gmail_client", "followup_agent", "mcp_server"]
 
 [project.scripts]
 nudge = "main:main"
+nudge-mcp = "mcp_server:main"

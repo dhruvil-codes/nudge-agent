@@ -77,11 +77,36 @@ nudge [OPTIONS]
 
 ---
 
+## 🤖 Model Context Protocol (MCP) Server
+
+Nudge includes a built-in **MCP Server** (`nudge-mcp`) allowing AI clients like **Claude Desktop**, **Cursor**, and **Antigravity IDE** to natively scan your inbox, generate follow-up drafts, and query local analytics!
+
+### Add to Claude Desktop (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "nudge": {
+      "command": "nudge-mcp"
+    }
+  }
+}
+```
+
+### Exposed MCP Tools:
+- 🔍 `scan_unanswered_emails`: Scans sent Gmail threads for follow-up candidates.
+- 🤖 `generate_followup_draft`: Generates multi-tone follow-up drafts (`check_in`, `value_add`, `breakup`).
+- ✍️ `create_gmail_draft`: Attaches approved drafts to Gmail threads.
+- 📊 `get_nudge_dashboard_stats`: Queries SQLite history metrics & recent log.
+
+---
+
 ## 🛠 Architecture
 
 ```text
 nudge/
 ├── main.py             # Rich TUI Orchestrator & interactive keypress approval loop
+├── mcp_server.py       # FastMCP server exposing 4 AI tools for Claude/Cursor/Antigravity
 ├── gmail_client.py     # Gmail API authentication, MIME body parser & SQLite history DB
 ├── followup_agent.py   # Decision engine & Groq Llama 3.3 70B prompt generator
 └── pyproject.toml      # Packaging metadata & entrypoints
