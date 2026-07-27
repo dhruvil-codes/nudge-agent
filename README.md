@@ -80,17 +80,34 @@ nudge [OPTIONS]
 
 ## 🤖 Model Context Protocol (MCP) Server
 
-Nudge includes a built-in **MCP Server** (`nudge-mcp`) allowing AI clients like **Claude Desktop**, **Cursor**, and **Antigravity IDE** to natively scan your inbox, generate follow-up drafts, and query local analytics!
+Nudge includes a standalone **MCP Server** ([mcp_server.py](https://github.com/dhruvil-codes/nudge-agent/blob/main/mcp_server.py)) allowing AI clients like **Claude Desktop**, **Cursor**, and **Antigravity IDE** to natively scan your inbox, generate follow-up drafts, and query local analytics!
 
 ### ⚡ 1-Click Zero-Code Setup:
 
-Vibe-coders don't need to edit JSON files or touch code! Just run:
+If installed via pip, run:
 
 ```bash
 nudge --setup-mcp
 ```
 
-This automatically detects your Claude Desktop installation and configures the `nudge-mcp` server! Then just restart Claude Desktop.
+This automatically detects your Claude Desktop installation and configures the server!
+
+### 🛠️ Manual / Source Code Setup:
+
+If you clone the repository or download [mcp_server.py](https://github.com/dhruvil-codes/nudge-agent/blob/main/mcp_server.py) directly, add this to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "nudge": {
+      "command": "python",
+      "args": [
+        "/path/to/nudge/mcp_server.py"
+      ]
+    }
+  }
+}
+```
 
 ### Exposed MCP Tools:
 - 🔍 `scan_unanswered_emails`: Scans sent Gmail threads for follow-up candidates.
