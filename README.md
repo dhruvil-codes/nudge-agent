@@ -69,6 +69,7 @@ nudge [OPTIONS]
 | Flag | Description |
 | :--- | :--- |
 | `--limit <N>` | Number of sent Gmail threads to scan (Default: 50) |
+| `--dashboard` | Display real-time TUI analytics dashboard & recent activity log |
 | `--auto` | Auto-approve mode (creates drafts without interactive prompts) |
 | `--login` | Force Google re-authentication to sign in with a new Gmail account |
 | `--logout` | Log out of your current Gmail account |

@@ -143,6 +143,41 @@ def record_thread_status(thread_id, status, recipient="", subject=""):
     conn.commit()
     conn.close()
 
+def get_history_stats():
+    """Retrieve aggregate statistics from history DB for dashboard."""
+    conn = sqlite3.connect(HISTORY_DB_PATH)
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT COUNT(*) FROM thread_history")
+    total_processed = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT COUNT(*) FROM thread_history WHERE status = 'DRAFT_CREATED'")
+    total_drafts = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT COUNT(*) FROM thread_history WHERE status = 'SKIPPED'")
+    total_skipped = cursor.fetchone()[0]
+    
+    conn.close()
+    return {
+        "total_processed": total_processed,
+        "total_drafts": total_drafts,
+        "total_skipped": total_skipped
+    }
+
+def get_recent_history(limit=10):
+    """Retrieve the N most recent processed threads."""
+    conn = sqlite3.connect(HISTORY_DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT thread_id, status, recipient, subject, updated_at
+        FROM thread_history
+        ORDER BY updated_at DESC
+        LIMIT ?
+    """, (limit,))
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
+
 # Initialize DB on load
 init_history_db()
 

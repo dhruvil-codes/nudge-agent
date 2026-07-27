@@ -20,7 +20,9 @@ from gmail_client import (
     create_draft,
     is_thread_processed,
     record_thread_status,
-    logout_gmail
+    logout_gmail,
+    get_history_stats,
+    get_recent_history
 )
 
 from followup_agent import (
@@ -74,17 +76,77 @@ def render_welcome_splash(mode_text):
     console.print(Panel(grid, border_style="cyan", title="[bold white]NUDGE AGENT[/bold white]", title_align="left"))
 
 
+def render_dashboard(my_email=None):
+    """Renders a rich TUI analytics dashboard showing total processed threads and recent activity."""
+    stats = get_history_stats()
+    recent_rows = get_recent_history(limit=8)
+
+    total = stats["total_processed"]
+    drafts = stats["total_drafts"]
+    skipped = stats["total_skipped"]
+    rate = round((drafts / total * 100), 1) if total > 0 else 0.0
+
+    account_str = f"Account: [bold yellow]{my_email}[/bold yellow]" if my_email else "Database: [bold yellow]~/.nudge/history.db[/bold yellow]"
+    header_panel = Panel(
+        f"[bold cyan]📊 NUDGE ANALYTICS DASHBOARD[/bold cyan]  │  {account_str}\n"
+        f"[dim]Real-time tracking from SQLite local store[/dim]",
+        border_style="cyan"
+    )
+    console.print(header_panel)
+
+    metrics_table = Table(expand=True, border_style="dim", box=None)
+    metrics_table.add_column("Total Evaluated", justify="center", style="bold white")
+    metrics_table.add_column("Drafts Created", justify="center", style="bold green")
+    metrics_table.add_column("Threads Skipped", justify="center", style="dim yellow")
+    metrics_table.add_column("Follow-up Rate", justify="center", style="bold cyan")
+
+    metrics_table.add_row(
+        str(total),
+        f"✨ {drafts}",
+        f"⏭  {skipped}",
+        f"📈 {rate}%"
+    )
+    console.print(Panel(metrics_table, title="[bold white]Overview Metrics[/bold white]", border_style="magenta"))
+
+    act_table = Table(expand=True, border_style="magenta", title="[bold white]Recent Activity Log[/bold white]")
+    act_table.add_column("Timestamp", style="dim", width=20)
+    act_table.add_column("Status", justify="center", width=16)
+    act_table.add_column("Recipient", style="cyan", width=25)
+    act_table.add_column("Subject", style="white")
+
+    if not recent_rows:
+        act_table.add_row("-", "[dim]No activity recorded yet[/dim]", "-", "-")
+    else:
+        for thread_id, status, recipient, subject, updated_at in recent_rows:
+            status_fmt = "[bold green]DRAFT CREATED[/bold green]" if status == "DRAFT_CREATED" else "[dim yellow]SKIPPED[/dim yellow]"
+            rec_clean = (recipient[:22] + "...") if len(recipient) > 25 else recipient
+            subj_clean = (subject[:40] + "...") if len(subject) > 43 else subject
+            act_table.add_row(str(updated_at)[:19], status_fmt, rec_clean or "-", subj_clean or "-")
+
+    console.print(act_table)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Nudge — AI Gmail Follow-up Agent")
     parser.add_argument("--auto", action="store_true", help="Auto-approve without keypress prompts")
     parser.add_argument("--limit", type=int, default=50, help="Number of sent threads to scan")
     parser.add_argument("--login", action="store_true", help="Force re-authentication with a new Gmail account")
     parser.add_argument("--logout", action="store_true", help="Log out of current Gmail account")
+    parser.add_argument("--dashboard", "--stats", action="store_true", help="Show Nudge analytics dashboard & activity history")
     args = parser.parse_args()
 
     if args.logout:
         logout_gmail()
         console.print("[bold green]✓ Logged out successfully![/bold green]")
+        return
+
+    if args.dashboard:
+        try:
+            service = authenticate_gmail()
+            my_email = get_my_email(service)
+        except Exception:
+            my_email = None
+        render_dashboard(my_email)
         return
 
     mode_text = "[yellow]Batch Auto Mode[/yellow]" if args.auto else "[cyan]Interactive Mode[/cyan]"
@@ -235,14 +297,34 @@ def main():
         if args.auto:
             return
 
-        console.print("\nPress: [bold cyan][L] Switch Account[/bold cyan] | [bold green][R] Rescan Inbox[/bold green] | [bold red][Q] Quit[/bold red]")
+        console.print("\nPress: [bold magenta][D] Dashboard[/bold magenta] | [bold cyan][L] Switch Account[/bold cyan] | [bold green][R] Rescan Inbox[/bold green] | [bold red][Q] Quit[/bold red]")
         try:
             post_key = readchar.readkey().lower()
         except (KeyboardInterrupt, EOFError):
             console.print("\n[bold red]Exiting Nudge...[/bold red]")
             return
 
-        if post_key == "l":
+        if post_key == "d":
+            console.print("")
+            render_dashboard(my_email)
+            console.print("\nPress: [bold cyan][L] Switch Account[/bold cyan] | [bold green][R] Rescan Inbox[/bold green] | [bold red][Q] Quit[/bold red]")
+            try:
+                post_key2 = readchar.readkey().lower()
+            except (KeyboardInterrupt, EOFError):
+                console.print("\n[bold red]Exiting Nudge...[/bold red]")
+                return
+            if post_key2 == "l":
+                console.print("\n[yellow]🔑 Switching Gmail Account...[/yellow]")
+                logout_gmail()
+                service = authenticate_gmail(force_reauth=True)
+                continue
+            elif post_key2 == "r":
+                console.print("\n[cyan]🔄 Rescanning Inbox...[/cyan]\n")
+                continue
+            else:
+                console.print("\n[bold red]Exiting Nudge...[/bold red]")
+                return
+        elif post_key == "l":
             console.print("\n[yellow]🔑 Switching Gmail Account...[/yellow]")
             logout_gmail()
             service = authenticate_gmail(force_reauth=True)
