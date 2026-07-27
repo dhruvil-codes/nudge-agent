@@ -1,4 +1,6 @@
 import argparse
+import os
+import json
 import sys
 import readchar
 from rich.console import Console
@@ -126,6 +128,43 @@ def render_dashboard(my_email=None):
     console.print(act_table)
 
 
+def setup_mcp_config():
+    """Automatically inject Nudge MCP configuration into Claude Desktop config file."""
+    if sys.platform == "win32":
+        config_dir = os.path.expandvars(r"%APPDATA%\Claude")
+    elif sys.platform == "darwin":
+        config_dir = os.path.expanduser("~/Library/Application Support/Claude")
+    else:
+        config_dir = os.path.expanduser("~/.config/Claude")
+
+    os.makedirs(config_dir, exist_ok=True)
+    config_path = os.path.join(config_dir, "claude_desktop_config.json")
+
+    config_data = {}
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, "r", encoding="utf-8") as f:
+                import json
+                config_data = json.load(f)
+        except Exception:
+            config_data = {}
+
+    if "mcpServers" not in config_data:
+        config_data["mcpServers"] = {}
+
+    config_data["mcpServers"]["nudge"] = {
+        "command": "nudge-mcp"
+    }
+
+    import json
+    with open(config_path, "w", encoding="utf-8") as f:
+        json.dump(config_data, f, indent=2)
+
+    console.print("\n[bold green]✨ Nudge MCP Server installed successfully into Claude Desktop![/bold green]")
+    console.print(f"[dim]Config updated: {config_path}[/dim]")
+    console.print("\n[cyan]👉 Just restart Claude Desktop to start using Nudge tools (🛠️)![/cyan]\n")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Nudge — AI Gmail Follow-up Agent")
     parser.add_argument("--auto", action="store_true", help="Auto-approve without keypress prompts")
@@ -133,7 +172,12 @@ def main():
     parser.add_argument("--login", action="store_true", help="Force re-authentication with a new Gmail account")
     parser.add_argument("--logout", action="store_true", help="Log out of current Gmail account")
     parser.add_argument("--dashboard", "--stats", action="store_true", help="Show Nudge analytics dashboard & activity history")
+    parser.add_argument("--setup-mcp", action="store_true", help="Automatically install Nudge MCP Server into Claude Desktop")
     args = parser.parse_args()
+
+    if args.setup_mcp:
+        setup_mcp_config()
+        return
 
     if args.logout:
         logout_gmail()

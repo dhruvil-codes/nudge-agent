@@ -72,6 +72,7 @@ nudge [OPTIONS]
 | `--dashboard` | Display real-time TUI analytics dashboard & recent activity log |
 | `--auto` | Auto-approve mode (creates drafts without interactive prompts) |
 | `--login` | Force Google re-authentication to sign in with a new Gmail account |
+| `--setup-mcp` | 1-Click Zero-Code MCP Server installer for Claude Desktop |
 | `--logout` | Log out of your current Gmail account |
 | `-h, --help` | Show command help and options |
 
@@ -81,17 +82,15 @@ nudge [OPTIONS]
 
 Nudge includes a built-in **MCP Server** (`nudge-mcp`) allowing AI clients like **Claude Desktop**, **Cursor**, and **Antigravity IDE** to natively scan your inbox, generate follow-up drafts, and query local analytics!
 
-### Add to Claude Desktop (`claude_desktop_config.json`):
+### ⚡ 1-Click Zero-Code Setup:
 
-```json
-{
-  "mcpServers": {
-    "nudge": {
-      "command": "nudge-mcp"
-    }
-  }
-}
+Vibe-coders don't need to edit JSON files or touch code! Just run:
+
+```bash
+nudge --setup-mcp
 ```
+
+This automatically detects your Claude Desktop installation and configures the `nudge-mcp` server! Then just restart Claude Desktop.
 
 ### Exposed MCP Tools:
 - 🔍 `scan_unanswered_emails`: Scans sent Gmail threads for follow-up candidates.
