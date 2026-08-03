@@ -3,6 +3,7 @@ README.md
 followup_agent.py
 gmail_client.py
 main.py
+mcp_server.py
 pyproject.toml
 nudge_agent.egg-info/PKG-INFO
 nudge_agent.egg-info/SOURCES.txt

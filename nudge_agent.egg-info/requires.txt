@@ -5,3 +5,4 @@ openai
 python-dotenv
 readchar
 rich
+mcp>=1.0.0

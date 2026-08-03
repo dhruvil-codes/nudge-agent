@@ -1,3 +1,4 @@
 followup_agent
 gmail_client
 main
+mcp_server

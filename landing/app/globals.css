@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+/* ─── Design tokens ─── */
+:root {
+  --background: #FAFAF8;
+  --foreground: #0A0A0A;
+  --muted: #6B6B6B;
+  --border: #E2E2DC;
+  --terminal-bg: #111110;
+  --terminal-text: #E8E8E4;
+
+  /* Grid system */
+  --grid-dot-size: 56px;
+  --grid-dot-color: rgba(0, 0, 0, 0.055);
+  --grid-line-color: rgba(0, 0, 0, 0.014);
+}
+
+.dark {
+  --background: #0A0A09;
+  --foreground: #F5F5F0;
+  --muted: #A1A19A;
+  --border: #262624;
+  --terminal-bg: #161615;
+  --terminal-text: #E8E8E4;
+
+  /* Grid system in dark mode */
+  --grid-dot-color: rgba(255, 255, 255, 0.07);
+  --grid-line-color: rgba(255, 255, 255, 0.02);
+}
+
+/* ─── Base reset ─── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  min-height: 100vh;
+  position: relative;
+}
+
+/* ─────────────────────────────────────────────────────
+   PRECISION DRAFTING GRID
+   Layer 1 (::before): dot nodes at major intersections
+   Layer 2 (::after):  fine guide lines between dots
+   ───────────────────────────────────────────────────── */
+
+/* Major dot nodes */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: radial-gradient(
+    circle,
+    var(--grid-dot-color) 1.5px,
+    transparent 1.5px
+  );
+  background-size: var(--grid-dot-size) var(--grid-dot-size);
+}
+
+/* Fine hairlines between dots */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent calc(var(--grid-dot-size) - 1px),
+      var(--grid-line-color) calc(var(--grid-dot-size) - 1px),
+      var(--grid-line-color) var(--grid-dot-size)
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent calc(var(--grid-dot-size) - 1px),
+      var(--grid-line-color) calc(var(--grid-dot-size) - 1px),
+      var(--grid-line-color) var(--grid-dot-size)
+    );
+}
+
+/* All page content sits above the grid */
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Cross tick marks at every 4th intersection ─── */
+.grid-cross-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  /* 4× the dot grid = 224px spacing */
+  background-image:
+    /* Horizontal tick */
+    linear-gradient(
+      0deg,
+      transparent 50%,
+      rgba(0,0,0,0.06) 50%
+    ),
+    /* Vertical tick */
+    linear-gradient(
+      90deg,
+      transparent 50%,
+      rgba(0,0,0,0.06) 50%
+    );
+  background-size: 224px 10px, 10px 224px;
+  background-position: 111px 111px, 111px 111px;
+}
+
+/* ─── Selection ─── */
+::selection {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.09);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.16);
+}
+
+/* ─── Utility: prevent layout shift on copy animation ─── */
+.copy-flash {
+  animation: copyFlash 0.35s ease-out forwards;
+}
+@keyframes copyFlash {
+  0%   { opacity: 1; }
+  40%  { opacity: 0.4; }
+  100% { opacity: 1; }
+}
